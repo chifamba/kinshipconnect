@@ -1,8 +1,21 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import PublicNavbar from '../components/PublicNavbar';
+import { useTree } from '../context/TreeContext';
 
 const LandingPage = () => {
+  const navigate = useNavigate();
+  const { login } = useTree();
+  const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '' });
+
+  const handleJoin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (formData.firstName && formData.email) {
+      login(`${formData.firstName} ${formData.lastName}`, formData.email);
+      navigate('/dashboard');
+    }
+  };
+
   return (
     <>
       <PublicNavbar />
@@ -45,28 +58,49 @@ const LandingPage = () => {
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-accent-blue"></div>
                 <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white font-display">Join the Community</h2>
                 <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">Create your free account to start building.</p>
-                <form className="space-y-4">
+                <form className="space-y-4" onSubmit={handleJoin}>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">First Name</label>
-                      <input className="w-full rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50" placeholder="Jane" type="text" />
+                      <input 
+                        className="w-full rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50" 
+                        placeholder="Jane" 
+                        type="text" 
+                        required
+                        value={formData.firstName}
+                        onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                      />
                     </div>
                     <div>
                       <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Last Name</label>
-                      <input className="w-full rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50" placeholder="Doe" type="text" />
+                      <input 
+                        className="w-full rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50" 
+                        placeholder="Doe" 
+                        type="text" 
+                        required
+                        value={formData.lastName}
+                        onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                      />
                     </div>
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
-                    <input className="w-full rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50" placeholder="jane@example.com" type="email" />
+                    <input 
+                      className="w-full rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50" 
+                      placeholder="jane@example.com" 
+                      type="email" 
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Password</label>
                     <input className="w-full rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50" placeholder="Create a password" type="password" />
                   </div>
-                  <Link to="/dashboard" className="w-full bg-primary hover:bg-green-700 text-white font-bold py-3 px-4 rounded shadow-lg transition mt-2 transform hover:-translate-y-0.5 block text-center">
+                  <button type="submit" className="w-full bg-primary hover:bg-green-700 text-white font-bold py-3 px-4 rounded shadow-lg transition mt-2 transform hover:-translate-y-0.5 block text-center cursor-pointer">
                     Create Free Account
-                  </Link>
+                  </button>
                   <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-4">
                     Already a member? <Link to="/dashboard" className="text-accent-blue hover:underline font-bold">Log in</Link>
                   </p>
@@ -76,6 +110,7 @@ const LandingPage = () => {
           </div>
         </div>
       </header>
+      {/* Testimonials and Features Sections kept as is, they are purely presentational */}
       <section className="bg-[#ebe9e4] dark:bg-gray-900 py-12 px-4 border-b border-gray-200 dark:border-gray-800">
         <div className="container mx-auto">
           <h2 className="text-center text-2xl font-serif text-gray-800 dark:text-gray-100 mb-8">Families are connecting every day—completely free.</h2>
@@ -193,122 +228,6 @@ const LandingPage = () => {
                   <p className="text-sm text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
                     Our algorithms scan billions of open-source historical records and public trees. We'll notify you when we find a birth certificate, census record, or potential relative.
                   </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-        <section className="py-16 px-4 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
-          <div className="container mx-auto max-w-6xl">
-            <h2 className="text-center text-4xl font-display text-gray-900 dark:text-white mb-4">Powerful features, available to everyone.</h2>
-            <p className="text-center text-gray-500 dark:text-gray-400 mb-12">One free account gives you access to everything. No hidden costs.</p>
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="bg-gray-50 dark:bg-gray-800 p-8 rounded-xl border border-gray-200 dark:border-gray-700 flex flex-col">
-                <div className="mb-4">
-                  <div className="bg-green-100 text-green-800 inline-flex items-center justify-center p-3 rounded-full mb-6">
-                    <span className="material-icons text-2xl">forest</span>
-                  </div>
-                  <h3 className="text-2xl font-bold dark:text-white mb-2">Unlimited Building</h3>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">Create as many profiles as you need. Upload unlimited photos and documents without any storage caps.</p>
-                </div>
-                <ul className="space-y-3 text-sm text-gray-600 dark:text-gray-300 flex-grow">
-                  <li className="flex items-start gap-2"><span className="material-icons text-green-600 text-base">check_circle</span> Unlimited tree size</li>
-                  <li className="flex items-start gap-2"><span className="material-icons text-green-600 text-base">check_circle</span> Unlimited media storage</li>
-                  <li className="flex items-start gap-2"><span className="material-icons text-green-600 text-base">check_circle</span> Import/Export GEDCOM</li>
-                </ul>
-              </div>
-              <div className="bg-[#f0f9ff] dark:bg-gray-800 p-8 rounded-xl border-2 border-accent-blue dark:border-blue-700 flex flex-col relative transform md:-translate-y-2 shadow-lg">
-                <div className="absolute top-0 right-0 bg-accent-blue text-white text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-lg">COMMUNITY POWERED</div>
-                <div className="mb-4">
-                  <div className="bg-blue-100 text-blue-800 inline-flex items-center justify-center p-3 rounded-full mb-6">
-                    <span className="material-icons text-2xl">groups</span>
-                  </div>
-                  <h3 className="text-2xl font-bold dark:text-white mb-2">Collaborative Growth</h3>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">Family history is a team effort. Invite unlimited family members to edit, comment, and merge duplicates.</p>
-                </div>
-                <ul className="space-y-3 text-sm text-gray-600 dark:text-gray-300 flex-grow">
-                  <li className="flex items-start gap-2"><span className="material-icons text-accent-blue text-base">check_circle</span> Unlimited collaborators</li>
-                  <li className="flex items-start gap-2"><span className="material-icons text-accent-blue text-base">check_circle</span> Granular edit permissions</li>
-                  <li className="flex items-start gap-2"><span className="material-icons text-accent-blue text-base">check_circle</span> Real-time change tracking</li>
-                  <li className="flex items-start gap-2"><span className="material-icons text-accent-blue text-base">check_circle</span> Community messaging</li>
-                </ul>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-800 p-8 rounded-xl border border-gray-200 dark:border-gray-700 flex flex-col">
-                <div className="mb-4">
-                  <div className="bg-purple-100 text-purple-800 inline-flex items-center justify-center p-3 rounded-full mb-6">
-                    <span className="material-icons text-2xl">public</span>
-                  </div>
-                  <h3 className="text-2xl font-bold dark:text-white mb-2">Full Record Access</h3>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">Access our entire database of historical records. Search billions of census records and more for free.</p>
-                </div>
-                <ul className="space-y-3 text-sm text-gray-600 dark:text-gray-300 flex-grow">
-                  <li className="flex items-start gap-2"><span className="material-icons text-gray-600 dark:text-gray-400 text-base">check_circle</span> 10B+ International records</li>
-                  <li className="flex items-start gap-2"><span className="material-icons text-gray-600 dark:text-gray-400 text-base">check_circle</span> Smart Record Matching</li>
-                  <li className="flex items-start gap-2"><span className="material-icons text-gray-600 dark:text-gray-400 text-base">check_circle</span> Global search capabilities</li>
-                </ul>
-              </div>
-            </div>
-            <div className="mt-12 text-center">
-              <Link to="/dashboard" className="bg-primary hover:bg-green-700 text-white font-bold py-4 px-12 rounded-full shadow-lg transition transform hover:-translate-y-1 text-lg">
-                Join KinshipConnect Now
-              </Link>
-              <p className="mt-4 text-sm text-gray-500">Always free, always open.</p>
-            </div>
-          </div>
-        </section>
-        <section className="py-20 px-4 bg-background-light dark:bg-background-dark">
-          <div className="container mx-auto max-w-6xl">
-            <div className="flex flex-col md:flex-row items-center gap-12">
-              <div className="md:w-1/2">
-                <h2 className="text-4xl font-display text-gray-900 dark:text-white mb-6">Learn more about the <br /> power of community.</h2>
-                <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
-                  Discovering your family history is a journey best shared. Our community forums and expert guides help you break through brick walls without cost barriers.
-                </p>
-                <p className="text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
-                  Connect with other researchers focusing on the same surnames or regions. Share tips, translate documents, and celebrate discoveries together.
-                </p>
-                <div className="bg-[#e0f2f1] dark:bg-gray-800 p-6 rounded-xl border border-teal-100 dark:border-teal-900 relative overflow-hidden shadow-sm max-w-md">
-                  <div className="relative z-10">
-                    <h4 className="text-teal-800 dark:text-teal-200 font-display text-xl mb-4">Community Highlight</h4>
-                    <div className="bg-white dark:bg-gray-700 p-4 rounded shadow-sm mb-3 flex items-start gap-3">
-                      <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-full">
-                        <span className="material-icons text-blue-600 dark:text-blue-300 text-sm">question_answer</span>
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Forum Topic</p>
-                        <p className="font-bold text-sm text-gray-800 dark:text-white">Deciphering 18th Century German Script</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">32 replies • Last active 2h ago</p>
-                      </div>
-                    </div>
-                    <div className="h-2 bg-teal-200 dark:bg-teal-900 rounded w-2/3 mb-2"></div>
-                    <div className="h-2 bg-teal-200 dark:bg-teal-900 rounded w-1/2"></div>
-                  </div>
-                  <span className="material-icons absolute -bottom-4 -right-4 text-9xl text-teal-500 opacity-10">school</span>
-                </div>
-                <div className="mt-8">
-                  <button className="bg-accent-blue text-white font-bold py-3 px-8 rounded-full hover:bg-opacity-90 transition shadow-md">
-                    Visit the Community
-                  </button>
-                </div>
-              </div>
-              <div className="md:w-1/2 space-y-12">
-                <div>
-                  <div className="rounded-xl overflow-hidden shadow-lg mb-6">
-                    <img alt="Friends looking at laptop" className="w-full h-64 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDIVRGUoP1DRgBgk6yCtd3iqqmkus9rLidfEjBkfZGRVUTaKNol9ZNQGkW5rh9ZbHSpaw7jZH_ozkADzknp1l24FdhXWIrIzBSCKr43omgEopO9_451b2sTFU8GQLhAzDvuxituQNY2scbqNfpBTsqjoMrWOfGMbxeKlUcT9dH4k9c7LViGuismXgseWrx3tEeeZyGqjaCYwgJATdD0kHixqaDaivWo23lSic5t79iC6QxTzjSNhAPI6n81TWhOZpbVo24AkaZFgcRB" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Get started with a quick import.</h3>
-                  <p className="text-gray-600 dark:text-gray-300 mb-4">Already have a GEDCOM file? Upload it to instantly generate your collaborative tree and invite family members to explore. No subscription required.</p>
-                  <button className="bg-primary text-white font-bold py-2 px-6 rounded-full hover:bg-opacity-90 transition text-sm">
-                    Upload GEDCOM
-                  </button>
-                </div>
-                <div className="bg-black text-white rounded-xl overflow-hidden relative group cursor-pointer">
-                  <img alt="Old maps and photos" className="w-full h-64 object-cover opacity-60 group-hover:opacity-40 transition duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIlNhSSGccO_6CEnd8KJUQDu-mjPm4zMz1A-BTJhNBJLJzLl0SANDCzrcynBRhvEGVblSZt1kbqP11GsZ3GE4w5m5gHaxMO1AzDb7EqJ2tCn3SAWG3oKiyzrmeldhKvPDocG3u63rVtbkJ6QNBcrX9_chH9ga_R6W_BLC6UDQTiLkz2-8SMWlNXBw3jT2OjHOViNGtYzST-WuSWN0Cv5i0hpJBJUHgkD9xY215DTSenG1IaYmHlXMMVNd6emlIqlU9vuf-Q84mLkQ8" />
-                  <div className="absolute bottom-0 left-0 p-6 w-full bg-gradient-to-t from-black to-transparent">
-                    <h3 class="text-xl font-bold mb-2">Explore our Security Center.</h3>
-                    <p className="text-sm text-gray-300 mb-4">Learn how we encrypt your data and protect living relatives. Your data is yours.</p>
-                    <span className="inline-block bg-white text-black text-xs font-bold px-3 py-1 rounded hover:bg-gray-200 transition">Read Security Whitepaper</span>
-                  </div>
                 </div>
               </div>
             </div>

@@ -1,7 +1,7 @@
-# KinshipConnect - Project Requirements & Contribution Guide
+# KinshipConnect - Requirements Specification
 
-**Version:** 1.0.0  
-**Status:** Active Development
+**Version:** 1.0.1
+**Reference:** See [TODO.md](./TODO.md) for current implementation status.
 
 ## 1. Project Overview
 
@@ -53,7 +53,7 @@ KinshipConnect utilizes a modern, performance-oriented frontend stack.
 *   **Framework:** [React v19](https://react.dev/)
 *   **Language:** [TypeScript](https://www.typescriptlang.org/) (Strict Mode)
 *   **Styling:** [Tailwind CSS](https://tailwindcss.com/)
-*   **Routing:** [React Router v7](https://reactrouter.com/)
+*   **Routing:** [React Router v7](https://reactrouter.com/) (using `react-router-dom`)
 *   **Build Tool:** Vite (implied via ESM structure)
 *   **Icons:** Material Symbols & Material Icons
 *   **Fonts:** Google Fonts (Playfair Display, Source Sans Pro)
@@ -71,8 +71,8 @@ To maintain a high-quality codebase, all contributors are expected to adhere to 
 
 ### 4.2 React Best Practices
 *   **Functional Components:** Use functional components with Hooks. Class components are not permitted.
-*   **Composition:** Break large pages into smaller, reusable components located in `src/components`.
-*   **Hooks:** Logic that involves side effects or state management should be extracted into custom hooks (`src/hooks`).
+*   **Composition:** Break large pages into smaller, reusable components located in `components/`.
+*   **Hooks:** Logic that involves side effects or state management should be extracted into custom hooks (`hooks/` or `context/`).
 *   **Rendering:** Ensure components are idempotent and handle loading/error states gracefully.
 
 ### 4.3 CSS & Styling (Tailwind)
@@ -85,11 +85,9 @@ To maintain a high-quality codebase, all contributors are expected to adhere to 
 ```
 /
 ├── components/         # Reusable UI components (Buttons, Navbars, Cards)
+├── context/            # Global state providers (TreeContext)
 ├── pages/              # Route-level components (Dashboard, LandingPage)
-├── hooks/              # Custom React hooks
-├── services/           # API integration and business logic
 ├── types/              # Global TypeScript interfaces
-├── utils/              # Helper functions and formatters
 ├── App.tsx             # Main Layout and Router
 ├── index.tsx           # Entry point
 └── tailwind.config.js  # Design system configuration
@@ -116,30 +114,3 @@ To maintain a high-quality codebase, all contributors are expected to adhere to 
 *   **Forms:** All inputs must have associated labels (visible or `aria-label`).
 *   **Contrast:** Ensure text meets WCAG AA standards against backgrounds.
 *   **Keyboard Nav:** All interactive elements must be focusable.
-
----
-
-## 6. Contribution Guidelines
-
-We welcome contributions from the community!
-
-1.  **Fork & Clone:** Fork the repository and clone it locally.
-2.  **Branching:** Create a new branch for your feature or fix.
-    *   Format: `feature/name-of-feature` or `fix/issue-description`.
-3.  **Commit Messages:** Use Conventional Commits.
-    *   `feat: add photo upload modal`
-    *   `fix: correct z-index on navbar`
-    *   `docs: update readme`
-4.  **Pull Requests:**
-    *   Describe the change clearly.
-    *   Include screenshots for UI changes.
-    *   Ensure all types pass checks.
-
-### Notes for Maintainers
-*   Review PRs for adherence to the design system (check dark mode!).
-*   Ensure no new dependencies are added without discussion.
-*   Prioritize performance: The tree view must remain performant with 100+ nodes.
-
----
-
-*Thank you for helping us build the future of open genealogy.*

@@ -5,16 +5,14 @@ import Dashboard from './pages/Dashboard';
 import AddPerson from './pages/AddPerson';
 import Invite from './pages/Invite';
 import Footer from './components/Footer';
+import { TreeProvider } from './context/TreeContext';
 
 const AppContent = () => {
   const location = useLocation();
-  // Dashboard handles its own layout structure (full screen with sidebar), so we might want to exclude standard footer/margins if needed.
-  // However, based on wireframes, Dashboard has a specific layout.
-  
-  const isDashboard = location.pathname === '/dashboard';
+  const isDashboard = location.pathname === '/dashboard' || location.pathname === '/add-person' || location.pathname === '/invite';
 
   return (
-    <div className={`flex flex-col min-h-screen ${isDashboard ? 'h-screen overflow-hidden' : ''}`}>
+    <div className={`flex flex-col min-h-screen ${isDashboard ? 'bg-[#f0f4f8] dark:bg-[#111]' : ''}`}>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
@@ -29,9 +27,11 @@ const AppContent = () => {
 
 const App = () => {
   return (
-    <HashRouter>
-      <AppContent />
-    </HashRouter>
+    <TreeProvider>
+      <HashRouter>
+        <AppContent />
+      </HashRouter>
+    </TreeProvider>
   );
 };
 

@@ -1,7 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTree } from '../context/TreeContext';
 
 const AppNavbar = () => {
+  const { user } = useTree();
+
   return (
     <nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 py-2 px-4 flex justify-between items-center z-50 shadow-sm shrink-0">
       <div className="flex items-center space-x-6">
@@ -34,8 +37,10 @@ const AppNavbar = () => {
         </button>
         <div className="h-6 w-px bg-gray-300 dark:bg-gray-600 mx-2"></div>
         <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 p-1 rounded-full pr-3 transition">
-          <div className="h-8 w-8 bg-primary text-white rounded-full flex items-center justify-center font-bold text-sm">JS</div>
-          <span className="text-sm font-semibold hidden sm:block">John Smith</span>
+          <div className="h-8 w-8 bg-primary text-white rounded-full flex items-center justify-center font-bold text-sm">
+            {user.name ? user.name.charAt(0) : 'J'}
+          </div>
+          <span className="text-sm font-semibold hidden sm:block">{user.name || 'Guest'}</span>
           <span className="material-symbols-outlined text-sm text-gray-400">expand_more</span>
         </div>
       </div>
