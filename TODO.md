@@ -16,9 +16,9 @@ Use this document to track progress, pick up tasks, and understand the current s
 - ✅ **Basic 3-Generation View**: Display Focus person, Parents, and Children.
 - ✅ **Navigation**: Clicking a node refocusses the tree on that person.
 - ✅ **Empty States**: Visual placeholders for missing parents/children with "Add" buttons.
-- ⏳ **Canvas/Graph View**: Implement an infinite canvas (pan & zoom) to see more than 3 generations at once.
-- ⏳ **Complex Relationships**: visual support for multiple spouses and step-siblings.
-- ⏳ **Sibling View**: Display siblings of the focus person in the tree layout.
+- ✅ **Canvas/Graph View**: Implement an infinite canvas (pan & zoom) to see more than 3 generations at once.
+- ✅ **Complex Relationships**: visual support for multiple spouses (via spouse connector) and siblings.
+- ✅ **Sibling View**: Display siblings of the focus person in the tree layout.
 
 ## ✍️ Domain: Data Entry & Management
 *Focus: Forms, Validation, and CRUD operations.*
@@ -33,7 +33,7 @@ Use this document to track progress, pick up tasks, and understand the current s
 *Focus: Saving data and importing/exporting.*
 
 - ✅ **Global State**: `TreeContext` implementation for managing app-wide data.
-- ⏳ **Local Storage Persistence**: Save tree data to browser `localStorage` to survive page reloads.
+- ✅ **Local Storage Persistence**: Save tree data to browser `localStorage` to survive page reloads.
 - ⏳ **GEDCOM Import**: Parser to read `.ged` files and populate the state.
 - ⏳ **GEDCOM Export**: Generator to download current state as a standard GEDCOM file.
 - 📦 **Cloud Sync**: (Future) Sync data to a backend database.

@@ -12,13 +12,16 @@ const AddPerson = () => {
   // Parse query params to determine relationship
   const childId = searchParams.get('childId');
   const parentId = searchParams.get('parentId');
-  const relationType = searchParams.get('relation'); // 'FATHER', 'MOTHER', 'CHILD'
+  const spouseId = searchParams.get('spouseId');
+  const relationType = searchParams.get('relation'); // 'FATHER', 'MOTHER', 'CHILD', 'SPOUSE'
 
   const relativeName = childId 
     ? getPerson(childId)?.firstName 
     : parentId 
       ? getPerson(parentId)?.firstName 
-      : 'Relative';
+      : spouseId
+        ? getPerson(spouseId)?.firstName
+        : 'Relative';
 
   const [formData, setFormData] = useState<Partial<Person>>({
     firstName: '',
@@ -29,20 +32,46 @@ const AddPerson = () => {
     isLiving: true,
   });
 
+  // Set default gender based on relation type
+  useEffect(() => {
+    if (relationType === 'FATHER') setFormData(prev => ({ ...prev, gender: 'Male' }));
+    if (relationType === 'MOTHER') setFormData(prev => ({ ...prev, gender: 'Female' }));
+    if (relationType === 'SPOUSE' && spouseId) {
+        const spouse = getPerson(spouseId);
+        if (spouse && spouse.gender === 'Male') setFormData(prev => ({ ...prev, gender: 'Female' }));
+        if (spouse && spouse.gender === 'Female') setFormData(prev => ({ ...prev, gender: 'Male' }));
+    }
+  }, [relationType, spouseId, getPerson]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Construct new person object
     const newPerson: any = {
       ...formData,
+      firstName: formData.firstName?.trim(),
+      lastName: formData.lastName?.trim(),
     };
     
     // Logic for adding a CHILD (link child to existing parent)
     if (relationType === 'CHILD' && parentId) {
        const parent = getPerson(parentId);
-       // Simple heuristic: if parent is Male, set fatherId, else motherId
-       if (parent?.gender === 'Male') newPerson.fatherId = parentId;
-       else newPerson.motherId = parentId;
+       if (parent) {
+         if (parent.gender === 'Male') {
+            newPerson.fatherId = parentId;
+            // Robustness: If the father has a spouse, assume she is the mother
+            if (parent.spouseId) newPerson.motherId = parent.spouseId;
+         } else {
+            newPerson.motherId = parentId;
+            // Robustness: If the mother has a spouse, assume he is the father
+            if (parent.spouseId) newPerson.fatherId = parent.spouseId;
+         }
+       }
+    }
+
+    // Logic for adding a SPOUSE (link new person to existing spouse)
+    if (relationType === 'SPOUSE' && spouseId) {
+        newPerson.spouseId = spouseId;
     }
 
     // Add the person and get the new ID
@@ -55,22 +84,20 @@ const AddPerson = () => {
     else if (relationType === 'MOTHER' && childId) {
         updatePerson(childId, { motherId: newPersonId });
     }
+    // Logic for linking the existing spouse to the new person
+    else if (relationType === 'SPOUSE' && spouseId) {
+        updatePerson(spouseId, { spouseId: newPersonId });
+    }
 
     // Redirect logic:
-    // If we added a child, focus on the parent (user doesn't lose context) or the new child?
-    // Usually focusing on the parent (the node we came from) feels stable, 
-    // but focusing on the new child allows immediate editing of the new person.
-    // Let's focus on the 'childId' (the Focus Person) if we added a parent to them.
-    // If we added a child to 'parentId', let's focus on 'parentId' (Focus Person).
-    
-    let nextFocusId = newPersonId; // Default to showing the new person?
+    let nextFocusId = newPersonId; 
     
     if (childId) {
-        // We added a parent to 'childId'. Return to 'childId'.
         nextFocusId = childId; 
     } else if (parentId) {
-        // We added a child to 'parentId'. Return to 'parentId'.
         nextFocusId = parentId;
+    } else if (spouseId) {
+        nextFocusId = spouseId;
     }
 
     navigate(`/dashboard?focusId=${nextFocusId}`);
@@ -109,7 +136,7 @@ const AddPerson = () => {
                         <div className="flex gap-4">
                           <div className="flex-1">
                             <input 
-                              className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:border-primary focus:ring-primary shadow-sm" 
+                              className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:border-primary focus:ring-primary shadow-sm dark:text-white" 
                               placeholder="First Name" 
                               required 
                               type="text" 
@@ -119,7 +146,7 @@ const AddPerson = () => {
                           </div>
                           <div className="flex-1">
                             <input 
-                              className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:border-primary focus:ring-primary shadow-sm" 
+                              className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:border-primary focus:ring-primary shadow-sm dark:text-white" 
                               placeholder="Last Name" 
                               required 
                               type="text" 
@@ -142,7 +169,7 @@ const AddPerson = () => {
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Gender</label>
                         <select 
-                          className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:border-primary focus:ring-primary shadow-sm"
+                          className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:border-primary focus:ring-primary shadow-sm dark:text-white"
                           value={formData.gender}
                           onChange={e => setFormData({...formData, gender: e.target.value as any})}
                         >
@@ -154,7 +181,7 @@ const AddPerson = () => {
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Birth Date</label>
                         <input 
-                          className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:border-primary focus:ring-primary shadow-sm" 
+                          className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:border-primary focus:ring-primary shadow-sm dark:text-white" 
                           type="date" 
                           value={formData.birthDate}
                           onChange={e => setFormData({...formData, birthDate: e.target.value})}
@@ -166,7 +193,7 @@ const AddPerson = () => {
                         <div className="relative">
                           <span className="material-symbols-outlined absolute left-3 top-2.5 text-gray-400">location_on</span>
                           <input 
-                            className="pl-10 w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:border-primary focus:ring-primary shadow-sm" 
+                            className="pl-10 w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:border-primary focus:ring-primary shadow-sm dark:text-white" 
                             placeholder="City, County, State, Country" 
                             type="text" 
                             value={formData.birthPlace}
@@ -178,7 +205,7 @@ const AddPerson = () => {
                   </section>
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-700/30 px-8 py-5 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
-                  <Link to={`/dashboard?focusId=${childId || parentId || ''}`} className="px-6 py-2 rounded-full font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition">Cancel</Link>
+                  <Link to={`/dashboard?focusId=${childId || parentId || spouseId || ''}`} className="px-6 py-2 rounded-full font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition">Cancel</Link>
                   <button className="bg-primary hover:bg-opacity-90 text-white font-bold py-2 px-8 rounded-full shadow-lg transition transform hover:-translate-y-0.5 flex items-center gap-2" type="submit">
                     <span className="material-icons text-sm">save</span>
                     Save Person
