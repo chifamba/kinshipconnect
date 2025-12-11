@@ -25,9 +25,9 @@ Use this document to track progress, pick up tasks, and understand the current s
 
 - ✅ **Add Person Form**: Create new profiles with basic details (Name, Dates, Location).
 - ✅ **Relationship Linking**: Automatically link new profiles as Parent or Child of existing nodes.
-- ⏳ **Edit Person**: Functionality to modify existing profile details (currently stubbed in UI).
-- ⏳ **Delete Person**: Logic to remove a node and handle orphaned connections.
-- ⏳ **Validation**: Ensure birth dates are valid and logic is consistent (e.g., child cannot be older than parent).
+- ✅ **Edit Person**: Functionality to modify existing profile details.
+- ✅ **Delete Person**: Logic to remove a node and handle orphaned connections.
+- ✅ **Validation**: Ensure birth dates are valid and logic is consistent (e.g., child cannot be older than parent).
 
 ## 💾 Domain: Data Persistence & portability
 *Focus: Saving data and importing/exporting.*

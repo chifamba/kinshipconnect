@@ -71,6 +71,7 @@ interface TreeContextType {
   logout: () => void;
   addPerson: (person: Omit<Person, 'id'>) => string;
   updatePerson: (id: string, updates: Partial<Person>) => void;
+  deletePerson: (id: string) => void;
   getPerson: (id: string) => Person | undefined;
   getParents: (id: string) => { father?: Person; mother?: Person };
   getChildren: (id: string) => Person[];
@@ -125,6 +126,21 @@ export const TreeProvider = ({ children }: PropsWithChildren<{}>) => {
     setPeople((prev) => prev.map(p => p.id === id ? { ...p, ...updates } : p));
   };
 
+  const deletePerson = (id: string) => {
+    setPeople((prev) => {
+      // 1. Remove the person
+      const filtered = prev.filter(p => p.id !== id);
+      
+      // 2. Clean up references in other people
+      return filtered.map(p => ({
+        ...p,
+        fatherId: p.fatherId === id ? undefined : p.fatherId,
+        motherId: p.motherId === id ? undefined : p.motherId,
+        spouseId: p.spouseId === id ? undefined : p.spouseId
+      }));
+    });
+  };
+
   const getPerson = (id: string) => people.find(p => p.id === id);
 
   const getParents = (id: string) => {
@@ -163,6 +179,7 @@ export const TreeProvider = ({ children }: PropsWithChildren<{}>) => {
       logout,
       addPerson,
       updatePerson,
+      deletePerson,
       getPerson,
       getParents,
       getChildren,

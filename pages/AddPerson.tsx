@@ -7,13 +7,16 @@ import { Person } from '../types';
 const AddPerson = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { addPerson, getPerson, updatePerson } = useTree();
+  const { addPerson, getPerson, updatePerson, getParents } = useTree();
   
-  // Parse query params to determine relationship
+  // Parse query params to determine mode and relationship
+  const editId = searchParams.get('editId');
   const childId = searchParams.get('childId');
   const parentId = searchParams.get('parentId');
   const spouseId = searchParams.get('spouseId');
   const relationType = searchParams.get('relation'); // 'FATHER', 'MOTHER', 'CHILD', 'SPOUSE'
+
+  const isEditMode = !!editId;
 
   const relativeName = childId 
     ? getPerson(childId)?.firstName 
@@ -32,8 +35,33 @@ const AddPerson = () => {
     isLiving: true,
   });
 
-  // Set default gender based on relation type
+  const [errors, setErrors] = useState<string[]>([]);
+
+  // Load data if in Edit Mode
   useEffect(() => {
+    if (isEditMode && editId) {
+        const existingPerson = getPerson(editId);
+        if (existingPerson) {
+            setFormData({
+                firstName: existingPerson.firstName,
+                lastName: existingPerson.lastName,
+                gender: existingPerson.gender,
+                birthDate: existingPerson.birthDate || '',
+                birthPlace: existingPerson.birthPlace || '',
+                isLiving: existingPerson.isLiving,
+                photoUrl: existingPerson.photoUrl
+            });
+        } else {
+            // Error: Person not found
+            navigate('/dashboard');
+        }
+    }
+  }, [isEditMode, editId, getPerson, navigate]);
+
+  // Set default gender based on relation type (Only in Add Mode)
+  useEffect(() => {
+    if (isEditMode) return;
+
     if (relationType === 'FATHER') setFormData(prev => ({ ...prev, gender: 'Male' }));
     if (relationType === 'MOTHER') setFormData(prev => ({ ...prev, gender: 'Female' }));
     if (relationType === 'SPOUSE' && spouseId) {
@@ -41,10 +69,58 @@ const AddPerson = () => {
         if (spouse && spouse.gender === 'Male') setFormData(prev => ({ ...prev, gender: 'Female' }));
         if (spouse && spouse.gender === 'Female') setFormData(prev => ({ ...prev, gender: 'Male' }));
     }
-  }, [relationType, spouseId, getPerson]);
+  }, [relationType, spouseId, getPerson, isEditMode]);
+
+  const validate = (): boolean => {
+    const newErrors: string[] = [];
+    
+    // 1. Basic Requirement
+    if (!formData.firstName || !formData.lastName) {
+        newErrors.push("First and Last name are required.");
+    }
+
+    // 2. Date Validation
+    if (formData.birthDate) {
+        const birth = new Date(formData.birthDate);
+        const now = new Date();
+        
+        if (birth > now) {
+            newErrors.push("Birth date cannot be in the future.");
+        }
+
+        // Logic check: Child older than parent?
+        if (!isEditMode && relationType === 'CHILD' && parentId) {
+            const parent = getPerson(parentId);
+            if (parent && parent.birthDate) {
+                const parentBirth = new Date(parent.birthDate);
+                if (birth <= parentBirth) {
+                    newErrors.push(`Child cannot be born before parent (${parent.birthDate}).`);
+                }
+            }
+        }
+    }
+
+    setErrors(newErrors);
+    return newErrors.length === 0;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validate()) return;
+
+    if (isEditMode && editId) {
+        // --- EDIT MODE ---
+        updatePerson(editId, {
+            ...formData,
+            firstName: formData.firstName?.trim(),
+            lastName: formData.lastName?.trim(),
+        });
+        navigate(`/dashboard?focusId=${editId}`);
+        return;
+    }
+    
+    // --- ADD MODE ---
     
     // Construct new person object
     const newPerson: any = {
@@ -110,17 +186,37 @@ const AddPerson = () => {
         <div className="container mx-auto px-4 py-4 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
           <Link to="/dashboard" className="hover:text-primary">My Trees</Link>
           <span className="material-icons text-base">chevron_right</span>
-          <span className="text-gray-800 dark:text-white font-semibold">Add Person</span>
+          <span className="text-gray-800 dark:text-white font-semibold">{isEditMode ? 'Edit Profile' : 'Add Person'}</span>
         </div>
       </div>
       <main className="py-12 px-4 bg-background-light dark:bg-background-dark min-h-screen">
         <div className="container mx-auto max-w-4xl">
           <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-display text-gray-900 dark:text-white mb-2">Grow your family tree</h1>
+            <h1 className="text-3xl md:text-4xl font-display text-gray-900 dark:text-white mb-2">
+                {isEditMode ? `Edit ${formData.firstName} ${formData.lastName}` : 'Grow your family tree'}
+            </h1>
             <p className="text-gray-600 dark:text-gray-300">
-              {relationType ? `Adding ${relationType.toLowerCase()} to ${relativeName}.` : 'Add a relative to discover more connections.'}
+                {isEditMode 
+                    ? 'Update profile details and correct information.' 
+                    : relationType 
+                        ? `Adding ${relationType.toLowerCase()} to ${relativeName}.` 
+                        : 'Add a relative to discover more connections.'}
             </p>
           </div>
+          
+          {/* Validation Errors */}
+          {errors.length > 0 && (
+            <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-lg">
+                <div className="flex items-center gap-2 text-red-700 dark:text-red-300 font-bold mb-1">
+                    <span className="material-icons text-sm">error</span>
+                    Please fix the following:
+                </div>
+                <ul className="list-disc list-inside text-sm text-red-600 dark:text-red-400">
+                    {errors.map((err, idx) => <li key={idx}>{err}</li>)}
+                </ul>
+            </div>
+          )}
+
           <div className="grid md:grid-cols-3 gap-8">
             <div className="md:col-span-2">
               <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-xl shadow-soft border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -205,10 +301,10 @@ const AddPerson = () => {
                   </section>
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-700/30 px-8 py-5 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
-                  <Link to={`/dashboard?focusId=${childId || parentId || spouseId || ''}`} className="px-6 py-2 rounded-full font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition">Cancel</Link>
+                  <Link to={`/dashboard?focusId=${isEditMode ? editId : (childId || parentId || spouseId || '')}`} className="px-6 py-2 rounded-full font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition">Cancel</Link>
                   <button className="bg-primary hover:bg-opacity-90 text-white font-bold py-2 px-8 rounded-full shadow-lg transition transform hover:-translate-y-0.5 flex items-center gap-2" type="submit">
                     <span className="material-icons text-sm">save</span>
-                    Save Person
+                    {isEditMode ? 'Update Person' : 'Save Person'}
                   </button>
                 </div>
               </form>

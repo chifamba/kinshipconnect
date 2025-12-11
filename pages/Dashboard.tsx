@@ -104,7 +104,7 @@ const FocusNodeCard = ({ person }: { person: Person }) => {
 const Dashboard = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { people, getPerson, getParents, getChildren, getSiblings, getSpouse, homePersonId } = useTree();
+  const { people, getPerson, getParents, getChildren, getSiblings, getSpouse, homePersonId, deletePerson } = useTree();
   
   const paramFocusId = searchParams.get('focusId');
   const [focusId, setFocusId] = useState<string>(paramFocusId || homePersonId);
@@ -131,11 +131,16 @@ const Dashboard = () => {
   // Robustness: Recover from invalid focusId (e.g. deleted person or broken link)
   useEffect(() => {
     if (!focusPerson && people.length > 0) {
-        // If the requested person isn't found, default back to home person
-        // But only if we actually have people loaded
-        setFocusId(homePersonId);
+        // If the requested person isn't found, try the home person
+        const homeExists = people.find(p => p.id === homePersonId);
+        if (homeExists) {
+            setFocusId(homePersonId);
+        } else {
+            // Fallback: If even home person is gone, pick the first available person
+            setFocusId(people[0].id);
+        }
     }
-  }, [focusPerson, people, homePersonId]);
+  }, [focusPerson, people, homePersonId, focusId]);
 
   const { father, mother } = focusPerson ? getParents(focusId) : { father: undefined, mother: undefined };
   const children = focusPerson ? getChildren(focusId) : [];
@@ -195,7 +200,43 @@ const Dashboard = () => {
     if (!hasMoved.current) navigate(url);
   }
 
-  if (!focusPerson) return <div className="p-10 text-center text-gray-500">Loading tree...</div>;
+  const handleDelete = () => {
+    if (window.confirm(`Are you sure you want to delete ${focusPerson?.firstName}? This cannot be undone.`)) {
+        deletePerson(focusId);
+        // The useEffect will handle the redirection since focusPerson becomes undefined
+    }
+  };
+
+  // EMPTY STATE HANDLING
+  if (people.length === 0) {
+    return (
+      <div className="h-screen flex flex-col bg-[#f0f4f8] dark:bg-[#111]">
+        <AppNavbar />
+        <div className="flex-grow flex flex-col items-center justify-center p-8 text-center">
+            <div className="w-24 h-24 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
+                <span className="material-symbols-outlined text-5xl text-gray-400">nature_people</span>
+            </div>
+            <h2 className="text-2xl font-display font-bold text-gray-900 dark:text-white mb-2">Start Your Family Tree</h2>
+            <p className="text-gray-600 dark:text-gray-400 max-w-md mb-8">Your tree is currently empty. Add the first person to begin building your family history.</p>
+            <Link to="/add-person" className="bg-primary hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition transform hover:-translate-y-1 flex items-center gap-2">
+                <span className="material-icons">add</span> Add First Person
+            </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // LOADING / REDIRECTING STATE
+  if (!focusPerson) {
+      return (
+        <div className="h-screen flex flex-col bg-[#f0f4f8] dark:bg-[#111]">
+           <AppNavbar />
+           <div className="flex-grow flex items-center justify-center text-gray-500">
+               <span className="animate-pulse">Loading tree...</span>
+           </div>
+        </div>
+      );
+  }
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
@@ -203,13 +244,14 @@ const Dashboard = () => {
       <div className="flex-grow flex overflow-hidden">
         {/* Sidebar (Kept static) */}
         <aside className="w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col shrink-0 z-20 overflow-y-auto hidden md:flex">
-           {/* ... (Sidebar Content same as before) ... */}
            <div className="p-4 border-b border-gray-100 dark:border-gray-800">
-            <h3 className="font-bold text-sm text-gray-500 uppercase tracking-wider mb-2">Quick Actions</h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-bold text-sm text-gray-500 uppercase tracking-wider">Quick Actions</h3>
+            </div>
             <div className="space-y-2">
-              <Link to={`/add-person?childId=${focusId}&relation=FATHER`} className="w-full flex items-center gap-3 px-3 py-2 bg-primary text-white rounded-lg shadow-sm hover:bg-opacity-90 transition text-sm font-bold justify-center">
-                <span className="material-symbols-outlined text-lg">person_add</span> Add Parent
-              </Link>
+              <button className="w-full flex items-center gap-3 px-3 py-2 bg-primary text-white rounded-lg shadow-sm hover:bg-opacity-90 transition text-sm font-bold justify-center" onClick={() => navigate('/add-person')}>
+                <span className="material-symbols-outlined text-lg">person_add</span> Add New
+              </button>
               <button className="w-full flex items-center gap-3 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-sm font-semibold justify-center">
                 <span className="material-symbols-outlined text-lg">file_upload</span> Upload GEDCOM
               </button>
@@ -218,11 +260,21 @@ const Dashboard = () => {
               </Link>
             </div>
           </div>
-          <div className="p-4">
+          <div className="p-4 border-b border-gray-100 dark:border-gray-800">
              <h3 className="font-bold text-sm text-gray-500 uppercase tracking-wider mb-3">Tree Stats</h3>
-             <div className="text-sm text-gray-600 dark:text-gray-300">
-                People: <span className="font-bold">{people.length}</span>
+             <div className="grid grid-cols-2 gap-2">
+                <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded text-center">
+                    <div className="text-xl font-bold text-gray-800 dark:text-white">{people.length}</div>
+                    <div className="text-xs text-gray-500">People</div>
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded text-center">
+                    <div className="text-xl font-bold text-gray-800 dark:text-white">0</div>
+                    <div className="text-xs text-gray-500">Photos</div>
+                </div>
              </div>
+          </div>
+          <div className="p-4 mt-auto border-t border-gray-200 dark:border-gray-800 text-xs text-center text-gray-400">
+            Secure & Encrypted • Free Forever
           </div>
         </aside>
         
@@ -387,9 +439,20 @@ const Dashboard = () => {
             <h2 className="font-display text-xl font-bold mb-1 dark:text-white">{focusPerson.firstName} {focusPerson.lastName}</h2>
             <p className="text-sm text-gray-500 mb-4">{focusPerson.gender} • {focusPerson.birthDate?.split('-')[0] || '?'} - {focusPerson.isLiving ? 'Present' : '?'}</p>
             <div className="flex gap-2 mb-6">
-              <button className="flex-1 bg-primary text-white py-1.5 rounded text-sm font-bold shadow-sm hover:bg-opacity-90">Edit</button>
+              <Link to={`/add-person?editId=${focusId}`} className="flex-1 bg-primary text-white py-1.5 rounded text-sm font-bold shadow-sm hover:bg-opacity-90 flex items-center justify-center">Edit</Link>
               <button className="flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 py-1.5 rounded text-sm font-bold hover:bg-gray-50 dark:hover:bg-gray-700">Profile</button>
             </div>
+            
+            {/* Delete Button */}
+            <div className="mb-4">
+                <button 
+                  onClick={handleDelete}
+                  className="w-full border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/30 dark:hover:bg-red-900/20 py-1.5 rounded text-xs font-bold transition flex items-center justify-center gap-1"
+                >
+                  <span className="material-icons text-sm">delete</span> Delete Person
+                </button>
+            </div>
+
             <div className="space-y-4">
               <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
                 <span className="material-symbols-outlined text-gray-400">cake</span>
